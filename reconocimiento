@@ -33,8 +33,11 @@ for i=1:iB
         B_4(i,j) = B(i,j) - prom(i);
     end
 end
-
-
+%%Paso 5 matriz de covarianza C = A*A'
+C = cov(B_4);
+%Paso 6 SDV
+s_j = svd(C);
+[U_j,S_j,V_j] = svd(C);
 %% Paso 7   Tenemos menos imágenes que pixeles
 reducet=reduce';
 covar=zeros(1034,60);
