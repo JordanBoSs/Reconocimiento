@@ -1,0 +1,98 @@
+%%Paso 1
+
+dr=uigetdir();
+list=dir([dr, '\*.pgm']);        %here pgm is file extension of the images
+for x=1:length(list)
+    %Guardamos las 50 imágenes en una estructura tipo cell
+    %donde cada cell es una imagen
+         images{x}=double(imread([dr, '\', list(x).name]));
+end
+B=zeros(1034,60);
+%% Paso 2
+
+for i =1:60
+    A = cell2mat(images(i)); %Pasamos cada cell a una matriz
+    C=A(:);%Pasamos todas las columnas de la matriz a una sola
+    colim=B(:,i);
+    for j=1:1034
+    B(j,i)=C(j,1); %Guardamos cada columna en una matriz, donde cada columna
+                            %es una imagen.
+    end
+    j=1;
+end
+%% Paso 3
+
+prom = mean(B,2);%Obtenemos la media por cada renglón. Es decir, se suman
+%los pixeles 1,2, 3...n, y se obtiene su media
+
+%% Paso 4
+[iB,jB] = size(B);
+B_4 = zeros(iB,jB);
+for i=1:iB
+    for j=1:jB
+        B_4(i,j) = B(i,j) - prom(i);
+    end
+end
+
+
+%% Paso 7   Tenemos menos imágenes que pixeles
+reducet=reduce';
+covar=zeros(1034,60);
+%% 7.1
+for i = 1:1034
+    for j = 1:60
+    covar(i,j) =reducet(j,i)*reduce(i,j);
+    end
+end
+%% 7 .2
+
+[U,S,V] = svd(covar);
+
+%% Paso 7.3
+eigneValuesPowerNHalf = S.^(-0.5);
+
+%% Paso 7.4
+eigenVectorU=zeros(1034,60);
+
+matrixMultiplied = reduce*V;
+for i = 1:1034
+    for j = 1:60
+    eigenVectorU (i,j)= matrixMultiplied(i,j) / eigneValuesPowerNHalf(i,j);
+    end
+end
+dgnal=diag(eigenVectorU );
+vectorMean=zeros(60);
+sumOfSquares=zeros(60);
+for i=i:1034
+ for j =1:60
+    sumOfSquares(j) = dgnal(j).^2;
+ end
+end
+sumOfSquares1=diag(sumOfSquares(1:60));
+vectorMean = sqrt(sumOfSquares);
+for i=i:60
+    eigenVectorU(i) = eigenVectorU(i)/ vectorMean(i);
+end
+% vectorMean(i) = sqrt(sumOfSquares);
+%% Paso 8
+
+lv = min(eigenVectorU);
+mv = max(eigenVectorU);
+for j=1:1034
+for i = 1:60
+   newpx (j,i) = abs(255 *( (eigenVectorU(j,i) - lv(i))/(mv(i) - lv(i)) ));
+end
+end
+
+%% Paso 9
+ nwface = double(imread('newfaces/1.pgm'));
+ nwface = nwface(:);
+ps=zeros(1034,60);
+for i=1:1034
+    for j=1:60
+    ps(i,j)=dot(newpx(i,j),nwface(i));
+    end
+end
+
+rec=ps.*newpx +reduce;
+
